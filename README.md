@@ -19,11 +19,11 @@ nano-scBERT aims to provide:
 I carefully benchmarked nano-scBERT across different settings to give future users confidence in adopting nano-scBERT as a drop-in alternative to the official implementation. Full benchmark details are available in [benchmark_scbert_vs_nano.ipynb](benchmark_scbert_vs_nano.ipynb).
 
 #### Inference Runtime
-nano-scBERT achieves roughly **2.2× faster inference** than the original implementation.
+nano-scBERT achieves roughly **2.5× faster inference** than the original implementation.
 
 | Model      | Total (4,146 cells) | Per cell | Throughput  | Speedup |
 | ---------- | -------------------- | -------- | ----------- | ------- |
-| nano-scBERT | **53.71 s**         | **12.955 ms**  | **77.19 cells/s** | **2.2×**   |
+| nano-scBERT | **53.71 s**         | **12.955 ms**  | **77.19 cells/s** | **2.5×**   |
 | scBERT      | 132.64 s            | 31.992 ms| 31.25 cells/s | 1.00×   |
 
 #### Cell-level Embedding Reproducibility
