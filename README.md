@@ -53,7 +53,7 @@ pip install -r requirements.txt
 
 ## Quick Start
 
-## Task: Generate Cell Embeddings From Raw h5ad File
+## Task: Generate Cell Embeddings From Raw-count h5ad File
 ```sh
 python tasks/embedding.py \
     --input pancreas.h5ad \
@@ -61,7 +61,7 @@ python tasks/embedding.py \
     --mode raw
 ```
 
-## Task: Generate Cell Embeddings From Preprocessed h5ad File
+## Generate Cell Embeddings from Raw-count `.h5ad`
 ```sh
 python tasks/embedding.py \
     --input pancreas_scbert_preprocessed.h5ad \
@@ -71,7 +71,7 @@ python tasks/embedding.py \
 
 ## Roadmap
 - [X] Embedding .h5ad scRNA data
-- [ ] Finetuning for perturbation response prediction
+- [ ] Finetuning
 - [ ] Training from scratch
 
 Let me know what tasks you'd like to see next!
