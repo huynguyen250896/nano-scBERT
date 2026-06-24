@@ -53,19 +53,19 @@ pip install -r requirements.txt
 
 ## Quick Start
 
-## Task: Generate Cell Embeddings From Raw-count h5ad File
+## Task: Generate Cell Embeddings from Raw-count `.h5ad`
 ```sh
 python tasks/embedding.py \
     --input pancreas.h5ad \
-    --output embeddings.npy \
+    --output nano_scbert_embeddings.npy \
     --mode raw
 ```
 
-## Generate Cell Embeddings from Raw-count `.h5ad`
+## Task: Generate Cell Embeddings from Preprocessed `.h5ad`
 ```sh
 python tasks/embedding.py \
     --input pancreas_scbert_preprocessed.h5ad \
-    --output embeddings.npy \
+    --output nano_scbert_embeddings.npy \
     --mode preprocessed
 ```
 
