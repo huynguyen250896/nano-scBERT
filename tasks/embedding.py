@@ -7,8 +7,7 @@ import torch
 
 from .model import PerformerLM
 from .preprocessing import preprocess_adata
-from .registry import get_pretrained
-from .scBERT_tokenizer import scBERTTokenizer
+from .scBERT_tokenizer import scBERTTokenizer, get_pretrained
 
 
 @torch.no_grad()
@@ -113,6 +112,7 @@ def main(argv=None):
 
     x = torch.from_numpy(tokens).long()
 
+    #Load model
     print("Loading nano-scBERT...")
 
     model = PerformerLM.from_pretrained(
@@ -121,6 +121,9 @@ def main(argv=None):
         **info["config"],
     ).to(device)
 
+    # switch model to eval to turn of dropout
+    model.eval()
+
     fix_performer_projection_matrices(
         model,
         seed=0,
@@ -128,11 +131,6 @@ def main(argv=None):
 
     model = model.optimize_for_inference(
         compile_model=use_compile,
-    )
-
-    print(
-        f"use_amp={use_amp}, "
-        f"use_compile={use_compile}"
     )
 
     with torch.inference_mode():

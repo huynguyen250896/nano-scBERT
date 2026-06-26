@@ -36,29 +36,31 @@ If you know of another single-cell foundation model that should be included, fee
 I carefully benchmarked nano-scBERT across different settings to give future users confidence in adopting nano-scBERT as a drop-in alternative to the official implementation. Full benchmark details are available in [benchmark_scbert_vs_nano.ipynb](benchmark_scbert_vs_nano.ipynb).
 
 #### Inference Runtime
-nano-scBERT achieves roughly **2.5× faster inference** than the original implementation.
+nano-scBERT achieves approximately **2.5× faster inference** while reducing **peak GPU memory by 7.5%** compared to the original scBERT implementation.
 
-| Model      | Total (4,146 cells) | Per cell | Throughput  | Speedup |
-| ---------- | -------------------- | -------- | ----------- | ------- |
-| nano-scBERT | **53.71 s**         | **12.955 ms**  | **77.19 cells/s** | **2.5×**   |
-| scBERT      | 132.64 s            | 31.992 ms| 31.25 cells/s | 1.00×   |
+| Model           | Total (4,146 cells) |      Per cell |        Throughput |      Peak GPU | % Reduced Peak GPU |   Speedup |
+| --------------- | ------------------: | ------------: | ----------------: | ------------: | -----------------: | --------: |
+| **nano-scBERT** |         **73.07 s** | **16.838 ms** | **59.39 cells/s** | **18.255 GB** |           **7.5%** | **2.46×** |
+| scBERT          |            173.17 s |     41.480 ms |     24.11 cells/s |     19.726 GB |                  — |     1.00× |
+
 
 #### Cell-level Embedding Reproducibility
 nano-scBERT reproduces the original scBERT embedding space almost exactly, preserving both local and global structure.
 
 ![figure2](assets/umap_overlay_nano_scbert_vs_scbert.png)
 
-| Metric | Value |
-|----------|----------:|
-| Mean cosine similarity | **1.0000** |
-| Median cosine similarity | **1.0000** |
+| Metric                    |         Value |
+| ------------------------- | ------------: |
+| Mean cosine similarity    |    **1.0000** |
+| Median cosine similarity  |    **1.0000** |
 | Minimum cosine similarity | **0.9999998** |
-| Mean absolute difference | **2.74e-06** |
-| Distance correlation | **0.9999998** |
+| Mean absolute difference  |  **2.68e-06** |
+| Distance correlation      | **0.9999999** |
+
 
 The PCA spectrum and pairwise distance structure are nearly identical between nano-scBERT and the original implementation.
 
-> Benchmarked on a single NVIDIA A100 (80 GB) GPU with batch size 64 on the Pancreas dataset (4,146 cells).
+> Benchmarked on a single NVIDIA A100 (80 GB) GPU with batch size 32 on the Pancreas dataset (4,146 cells).
 
 ## Install
 ```bash
@@ -71,7 +73,50 @@ pip install -r requirements.txt
 ## Quick Start
 
 ### Using nano-scBERT in Python
-TBD...
+#### Generate Cell Embeddings from Raw-count `.h5ad`
+```python
+import torch
+import scanpy as sc
+
+from scBERT_tokenizer import scBERTTokenizer, get_pretrained
+from preprocessing import preprocess_adata
+from model import PerformerLM
+
+# Select GPU if available; otherwise fall back to CPU.
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Choose the supported pretrained nano-scBERT checkpoint.
+# Available options:
+#   - scbert-human-panglao
+model_name = "scbert-human-panglao"
+model = PerformerLM.from_pretrained_name(model_name).to(device) # Load the pretrained model.
+model.eval() # Switch to inference mode (disable dropout).
+
+# Optional: compile the model for faster inference and lower peak GPU memory.
+if device.type == "cuda":
+    model = torch.compile(model)
+
+# Load raw-count .h5ad.
+adata = sc.read_h5ad("./pancreas.h5ad")
+
+# Preprocess and tokenize the input cells.
+tokenizer = scBERTTokenizer.from_pretrained(model_name)
+
+adata = preprocess_adata(
+    adata,
+    tokenizer.genes,
+)
+
+tokens = tokenizer.encode_adata(adata)
+x = torch.from_numpy(tokens).long()
+
+# Run nano-scBERT.
+# Returns a tensor of shape (n_cells, hidden_size).
+embs = model.encode(
+    x,
+    batch_size=64,  # Increase if GPU memory allows.
+)
+```
 
 ### Using nano-scBERT from the Terminal
 #### Generate Cell Embeddings from Raw-count `.h5ad`
@@ -79,14 +124,18 @@ TBD...
 python tasks/embedding.py \
     --input data/pancreas.h5ad \
     --output outputs/nano_scbert_embeddings.npy \
+    --model scbert-human-panglao \
+    --batch_size 32 \
     --mode raw
 ```
 
-#### Generate Cell Embeddings from scBERT-preprocessed `.h5ad`
+#### Generate Cell Embeddings from scBERT-styled preprocessed `.h5ad`
 ```sh
 python tasks/embedding.py \
     --input data/pancreas_scbert_preprocessed.h5ad \
     --output outputs/nano_scbert_embeddings.npy \
+    --model scbert-human-panglao \
+    --batch_size 32 \
     --mode preprocessed
 ```
 

@@ -1,4 +1,3 @@
-#fused QKV + inference_mode + AMP + torch.compile + fix linear_attn
 from __future__ import annotations
 
 import math
@@ -10,6 +9,7 @@ import numpy as np
 import torch
 from torch import nn
 
+from scBERT_tokenizer import get_pretrained
 
 def exists(x):
     return x is not None
@@ -150,7 +150,7 @@ def linear_attention(q, k, v, eps=1e-6):
     return out
 
 
-class FastAttention(nn.Module):
+class PerformerAttention(nn.Module):
     def __init__(
         self,
         dim_heads,
@@ -277,7 +277,7 @@ class SelfAttention(nn.Module):
         dim_head = default(dim_head, dim // heads)
         inner_dim = dim_head * heads
 
-        self.fast_attention = FastAttention(
+        self.fast_attention = PerformerAttention(
             dim_head,
             nb_features,
             causal=causal,
@@ -482,7 +482,7 @@ class Performer(nn.Module):
         ):
             device = get_module_device(self)
 
-            for fast_attention in find_modules(self, FastAttention):
+            for fast_attention in find_modules(self, PerformerAttention):
                 fast_attention.redraw_projection_matrix(device)
 
             self.calls_since_last_redraw.zero_()
@@ -578,8 +578,6 @@ class PerformerLM(nn.Module):
         self.to_out = nn.Linear(dim, num_tokens) if not tie_embed else None
 
     def optimize_for_inference(self, compile_model: bool = True):
-        self.eval()
-    
         for p in self.parameters():
             p.requires_grad_(False)
     
@@ -633,9 +631,6 @@ class PerformerLM(nn.Module):
         compile_model: bool = False,
         verbose: bool = False,
     ):
-        was_training = self.training
-        self.eval()
-    
         if device is None:
             device = next(self.parameters()).device
         else:
@@ -679,9 +674,6 @@ class PerformerLM(nn.Module):
     
         out = torch.cat(outs, dim=0)
     
-        if was_training:
-            self.train()
-    
         return out
 
     @classmethod
@@ -694,19 +686,35 @@ class PerformerLM(nn.Module):
         **kwargs,
     ):
         model = cls(**kwargs)
-
+    
         ckpt = torch.load(str(checkpoint_path), map_location=map_location)
         state = ckpt["model_state_dict"] if "model_state_dict" in ckpt else ckpt
         state = _strip_module_prefix(state)
-
+    
         missing, unexpected = model.load_state_dict(state, strict=strict)
-
+    
         if not strict:
             print(f"[nano-scBERT] missing keys: {len(missing)}")
             print(f"[nano-scBERT] unexpected keys: {len(unexpected)}")
+    
+        return model    
 
-        return model
-
+    @classmethod
+    def from_pretrained_name(
+        cls,
+        name: str = "scbert-human-panglao",
+        *,
+        map_location="cpu",
+        strict=True,
+    ):
+        info = get_pretrained(name)
+    
+        return cls.from_pretrained(
+            info["checkpoint"],
+            map_location=map_location,
+            strict=strict,
+            **info["config"],
+        )
 
 def _pool_encodings(h, pool: str):
     if pool == "mean":
