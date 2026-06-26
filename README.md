@@ -82,7 +82,7 @@ python tasks/embedding.py \
     --mode raw
 ```
 
-### Generate Cell Embeddings from scBERT-preprocessed `.h5ad`
+#### Generate Cell Embeddings from scBERT-preprocessed `.h5ad`
 ```sh
 python tasks/embedding.py \
     --input data/pancreas_scbert_preprocessed.h5ad \
