@@ -1,13 +1,19 @@
 from __future__ import annotations
 
 import argparse
+import sys
+from pathlib import Path
+
 import numpy as np
 import scanpy as sc
 import torch
 
-from .model import PerformerLM
-from .preprocessing import preprocess_adata
-from .scBERT_tokenizer import scBERTTokenizer, get_pretrained
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from model import PerformerLM
+from preprocessing import preprocess_adata
+from scBERT_tokenizer import scBERTTokenizer, get_pretrained
 
 
 @torch.no_grad()
