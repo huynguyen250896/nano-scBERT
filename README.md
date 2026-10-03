@@ -128,10 +128,12 @@ Let me know what tasks you'd like to see next!
 ## Acknowledgments
 1. If you find this repo interesting and/or use nano-scBERT in your work, please cite the original paper:
 >Yang, F., Wang, W., Wang, F. et al. scBERT as a large-scale pretrained deep language model for cell type annotation of single-cell RNA-seq data. Nat Mach Intell (2022). https://doi.org/10.1038/s42256-022-00534-z
+        
+        
 
 and STAR⭐ my repo. Thanks!
 
-2. nano-scBERT is inspired by Andrej Karpathy's [nanoGPT](https://github.com/karpathy/nanogpt), Chris Hayduk's [minAlphaFold2](https://github.com/ChrisHayduk/minAlphaFold2), and especially Danqi Liao's [nano-scGPT](https://github.com/Danqi7/nano-scGPT).
+2. nano-scBERT is inspired by Andrej Karpathy's [nanoGPT](https://github.com/karpathy/nanogpt) and Chris Hayduk's [minAlphaFold2](https://github.com/ChrisHayduk/minAlphaFold2).
 
 ## License
 [MIT LICENSE](LICENSE)
